@@ -3,10 +3,9 @@ gin调试扩展, Telescope, 记录每个 API， 所有运行过程，包括请�
 
 
 # 使用
+当前还不直接提供页面服务，你要提前安装 [laravel](https://learnku.com/docs/laravel/9.x/installation/12200) 并且启用 [telescope](https://github.com/laravel/telescope) 。
 
-默认使用`database.yaml`的`default`数据库。 自定义数据库，新增
-
-`telescope.yaml`, 当前里面只有一行内容
+go组件默认使用`database.yaml`的`default`数据库。 如需自定义数据库，新增 `telescope.yaml`, 当前里面只有一行内容。数据库要和laravel互通
 ````yaml
 connection: mysql
 ````
