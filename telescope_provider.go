@@ -12,6 +12,7 @@ import (
 	"runtime"
 	"runtime/debug"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 )
@@ -60,7 +61,10 @@ func (t *telescopeHook) Fire(entry *logrus.Entry) error {
 	var content map[string]interface{}
 	switch mtype {
 	case EntryTypeQUERY:
-		content = t.EntryTypeQUERY(entry)
+		content, ok = t.EntryTypeQUERY(entry)
+		if !ok {
+			return nil
+		}
 	case EntryTypeREQUEST:
 		content, ok = t.EntryTypeREQUEST(entry)
 		if !ok {
@@ -107,7 +111,11 @@ func (t *telescopeHook) EntryTypeLOG(entry *logrus.Entry) map[string]interface{}
 	}
 }
 
-func (t *telescopeHook) EntryTypeQUERY(entry *logrus.Entry) map[string]interface{} {
+func (t *telescopeHook) EntryTypeQUERY(entry *logrus.Entry) (map[string]interface{}, bool) {
+	if strings.Index(entry.Message, "telescope_") != -1 {
+		return nil, false
+	}
+
 	var file, line string
 	if entry.HasCaller() {
 		file = entry.Caller.File
@@ -123,7 +131,7 @@ func (t *telescopeHook) EntryTypeQUERY(entry *logrus.Entry) map[string]interface
 		"line":       line,
 		"hash":       "",
 		"hostname":   t.hostname,
-	}
+	}, true
 }
 
 func (t *telescopeHook) EntryTypeREQUEST(entry *logrus.Entry) (map[string]interface{}, bool) {
