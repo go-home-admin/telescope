@@ -6,23 +6,23 @@ import (
 	gorm "gorm.io/gorm"
 )
 
-var _TelescopeProvidersSingle *Providers
+var _ProvidersSingle *Providers
 var _telescopeHookSingle *telescopeHook
 
 func GetAllProvider() []interface{} {
 	return []interface{}{
-		NewTelescopeProviders(),
+		NewProviders(),
 		NewtelescopeHook(),
 	}
 }
 
-func NewTelescopeProviders() *Providers {
-	if _TelescopeProvidersSingle == nil {
-		_TelescopeProvidersSingle = &Providers{}
-		_TelescopeProvidersSingle.Mysql = providers.GetBean("database").(providers.Bean).GetBean(*(providers.GetBean("config").(providers.Bean).GetBean("telescope.connect").(*string))).(*gorm.DB)
-		providers.AfterProvider(_TelescopeProvidersSingle, "")
+func NewProviders() *Providers {
+	if _ProvidersSingle == nil {
+		_ProvidersSingle = &Providers{}
+		_ProvidersSingle.Mysql = providers.GetBean("database").(providers.Bean).GetBean(providers.GetBean("config").(providers.Bean).GetBean("telescope.connect, default").(string)).(*gorm.DB)
+		providers.AfterProvider(_ProvidersSingle, "")
 	}
-	return _TelescopeProvidersSingle
+	return _ProvidersSingle
 }
 func NewtelescopeHook() *telescopeHook {
 	if _telescopeHookSingle == nil {

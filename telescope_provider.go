@@ -18,7 +18,7 @@ import (
 
 // Providers @Bean
 type Providers struct {
-	Mysql  *gorm.DB `inject:"database, @config(telescope.connect)"`
+	Mysql  *gorm.DB `inject:"database, @config(telescope.connect, default)"`
 	isOpen bool
 }
 
