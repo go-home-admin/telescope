@@ -19,7 +19,7 @@ func GetAllProvider() []interface{} {
 func NewProviders() *Providers {
 	if _ProvidersSingle == nil {
 		_ProvidersSingle = &Providers{}
-		_ProvidersSingle.Mysql = providers.GetBean("database").(providers.Bean).GetBean(providers.GetBean("config").(providers.Bean).GetBean("telescope.connect, default").(string)).(*gorm.DB)
+		_ProvidersSingle.Mysql = providers.GetBean("mysql").(providers.Bean).GetBean(*providers.GetBean("config").(providers.Bean).GetBean("telescope.connect, default").(*string)).(*gorm.DB)
 		providers.AfterProvider(_ProvidersSingle, "")
 	}
 	return _ProvidersSingle
