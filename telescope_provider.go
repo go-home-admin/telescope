@@ -156,8 +156,12 @@ func (t *telescopeHook) EntryTypeREQUEST(entry *logrus.Entry) (map[string]interf
 	if ginCtx.Request.PostForm == nil {
 		raw, ok := ginCtx.Get("raw")
 		if ok {
-			data := raw.([]byte)
-			if err == nil {
+			switch raw.(type) {
+			case string:
+				data := raw.(string)
+				_ = json.Unmarshal([]byte(data), &payload)
+			case []byte:
+				data := raw.([]byte)
 				_ = json.Unmarshal(data, &payload)
 			}
 		}
@@ -166,8 +170,14 @@ func (t *telescopeHook) EntryTypeREQUEST(entry *logrus.Entry) (map[string]interf
 			payload[k] = v[0]
 		}
 	}
-	start, _ := ginCtx.Get("start")
-	duration := time.Now().Sub(start.(time.Time))
+	var duration time.Duration
+	start, ok := ginCtx.Get("start")
+	if ok {
+		duration = time.Now().Sub(start.(time.Time))
+	} else {
+		duration = 0
+	}
+
 	return map[string]interface{}{
 		"ip_address": ginCtx.ClientIP(),
 		"uri":        entry.Message,
