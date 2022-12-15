@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"github.com/gin-gonic/gin"
+	"github.com/go-home-admin/home/app"
 	uuid "github.com/satori/go.uuid"
 	"github.com/sirupsen/logrus"
 	"gorm.io/gorm"
@@ -24,8 +25,15 @@ type Providers struct {
 }
 
 func (t *Providers) Init() {
-	t.isOpen = true
-	t.SetLog()
+	if app.IsDebug() {
+		t.isOpen = true
+	}
+}
+
+func (t *Providers) Boot() {
+	if t.isOpen {
+		t.SetLog()
+	}
 }
 
 func (t *Providers) IsEnable() bool {
