@@ -105,7 +105,7 @@ func (t *telescopeHook) Fire(entry *logrus.Entry) error {
 
 	res := t.mysql.Table("telescope_entries").Create(data)
 	if res.Error == nil {
-		t.CreateTag(id, mtype, content)
+		t.CreateTag(id, mtype, content, entry)
 	}
 	return nil
 }
@@ -223,7 +223,7 @@ func (t *telescopeHook) EntryTypeJob(entry *logrus.Entry) map[string]interface{}
 	return res
 }
 
-func (t *telescopeHook) CreateTag(uuid, mType string, content map[string]interface{}) {
+func (t *telescopeHook) CreateTag(uuid, mType string, content map[string]interface{}, entry *logrus.Entry) {
 	var tag string
 	switch mType {
 	case "log":
@@ -257,6 +257,18 @@ func (t *telescopeHook) CreateTag(uuid, mType string, content map[string]interfa
 			"entry_uuid": uuid,
 			"tag":        tag,
 		})
+	}
+	// WithFields(Fields{"type": "request", "tags": []string{"test"}})
+	tags, ok := entry.Data["tags"]
+	if ok {
+		if v, ok := tags.([]string); ok {
+			for _, tag := range v {
+				t.mysql.Table("telescope_entries_tags").Create(map[string]interface{}{
+					"entry_uuid": uuid,
+					"tag":        tag,
+				})
+			}
+		}
 	}
 }
 
