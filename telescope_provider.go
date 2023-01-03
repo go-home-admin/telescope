@@ -1,7 +1,6 @@
 package telescope
 
 import (
-	"bufio"
 	"bytes"
 	"encoding/json"
 	"github.com/gin-gonic/gin"
@@ -9,9 +8,6 @@ import (
 	uuid "github.com/satori/go.uuid"
 	"github.com/sirupsen/logrus"
 	"gorm.io/gorm"
-	"io"
-	"net"
-	"net/http"
 	"net/url"
 	"os"
 	"runtime"
@@ -85,6 +81,12 @@ func (t *telescopeHook) Fire(entry *logrus.Entry) error {
 		if !ok {
 			return nil
 		}
+	case EntryTypeTCP:
+		content, ok = t.EntryTypeTCP(entry)
+		if !ok {
+			return nil
+		}
+		mtype = EntryTypeREQUEST
 	case EntryTypeREDIS:
 		content = t.EntryTypeREDIS(entry)
 	case EntryTypeJOB:
@@ -210,6 +212,42 @@ func (t *telescopeHook) EntryTypeREQUEST(entry *logrus.Entry) (map[string]interf
 	}, true
 }
 
+func (t *telescopeHook) EntryTypeTCP(entry *logrus.Entry) (map[string]interface{}, bool) {
+	ip, ok := entry.Data["ip"].(string)
+	if !ok {
+		panic("tpc 需要 ip")
+	}
+	// 原始请求数据
+	raw, ok := entry.Data["read"]
+	if !ok {
+		panic("tpc 需要 read")
+	}
+	payload := make(map[string]interface{})
+	if ok {
+		switch raw.(type) {
+		case string:
+			data := raw.(string)
+			_ = json.Unmarshal([]byte(data), &payload)
+		case []byte:
+			data := raw.([]byte)
+			_ = json.Unmarshal(data, &payload)
+		}
+	}
+
+	return map[string]interface{}{
+		"ip_address":      ip,
+		"uri":             entry.Message,
+		"method":          "TCP",
+		"headers":         map[string][]string{},
+		"payload":         payload,
+		"response_status": 200,
+		"response":        "",
+		"duration":        0,
+		"memory":          0,
+		"hostname":        t.hostname,
+	}, true
+}
+
 func (t *telescopeHook) EntryTypeREDIS(entry *logrus.Entry) map[string]interface{} {
 	return map[string]interface{}{
 		"connection": "cache",
@@ -326,83 +364,6 @@ func (w TelescopeResponseWriter) WriteString(s string) (int, error) {
 	return w.ResponseWriter.WriteString(s)
 }
 
-type ResponseWriter struct {
-	http.ResponseWriter
-	size   int
-	status int
-}
-
-func (w *ResponseWriter) reset(writer http.ResponseWriter) {
-	w.ResponseWriter = writer
-	w.size = -1
-	w.status = 200
-}
-
-func (w *ResponseWriter) WriteHeader(code int) {
-	if code > 0 && w.status != code {
-		w.status = code
-	}
-}
-
-func (w *ResponseWriter) WriteHeaderNow() {
-	if !w.Written() {
-		w.size = 0
-		w.ResponseWriter.WriteHeader(w.status)
-	}
-}
-
-func (w *ResponseWriter) Write(data []byte) (n int, err error) {
-	w.WriteHeaderNow()
-	n, err = w.ResponseWriter.Write(data)
-	w.size += n
-	return
-}
-
-func (w *ResponseWriter) WriteString(s string) (n int, err error) {
-	w.WriteHeaderNow()
-	n, err = io.WriteString(w.ResponseWriter, s)
-	w.size += n
-	return
-}
-
-func (w *ResponseWriter) Status() int {
-	return w.status
-}
-
-func (w *ResponseWriter) Size() int {
-	return w.size
-}
-
-func (w *ResponseWriter) Written() bool {
-	return w.size != -1
-}
-
-// Hijack implements the http.Hijacker interface.
-func (w *ResponseWriter) Hijack() (net.Conn, *bufio.ReadWriter, error) {
-	if w.size < 0 {
-		w.size = 0
-	}
-	return w.ResponseWriter.(http.Hijacker).Hijack()
-}
-
-// CloseNotify implements the http.CloseNotifier interface.
-func (w *ResponseWriter) CloseNotify() <-chan bool {
-	return w.ResponseWriter.(http.CloseNotifier).CloseNotify()
-}
-
-// Flush implements the http.Flusher interface.
-func (w *ResponseWriter) Flush() {
-	w.WriteHeaderNow()
-	w.ResponseWriter.(http.Flusher).Flush()
-}
-
-func (w *ResponseWriter) Pusher() (pusher http.Pusher) {
-	if pusher, ok := w.ResponseWriter.(http.Pusher); ok {
-		return pusher
-	}
-	return nil
-}
-
 var EntryTypeBATCH = "batch"
 var EntryTypeCACHE = "cache"
 var EntryTypeCOMMAND = "command"
@@ -417,6 +378,7 @@ var EntryTypeNOTIFICATION = "notification"
 var EntryTypeQUERY = "query"
 var EntryTypeREDIS = "redis"
 var EntryTypeREQUEST = "request"
+var EntryTypeTCP = "tcp"
 var EntryTypeSCHEDULED_TASK = "schedule"
 var EntryTypeGATE = "gate"
 var EntryTypeVIEW = "view"
