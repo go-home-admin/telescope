@@ -22,6 +22,8 @@ import (
 type Providers struct {
 	Mysql  *gorm.DB `inject:"mysql, @config(telescope.connect, default)"`
 	isOpen bool
+
+	init bool
 }
 
 func (t *Providers) Init() {
@@ -31,7 +33,8 @@ func (t *Providers) Init() {
 }
 
 func (t *Providers) Boot() {
-	if t.isOpen {
+	if t.isOpen && !t.init {
+		t.init = true
 		t.SetLog()
 	}
 }
