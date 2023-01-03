@@ -1,6 +1,7 @@
 package telescope
 
 import (
+	"bufio"
 	"bytes"
 	"encoding/json"
 	"github.com/gin-gonic/gin"
@@ -8,6 +9,9 @@ import (
 	uuid "github.com/satori/go.uuid"
 	"github.com/sirupsen/logrus"
 	"gorm.io/gorm"
+	"io"
+	"net"
+	"net/http"
 	"net/url"
 	"os"
 	"runtime"
@@ -320,6 +324,83 @@ func (w TelescopeResponseWriter) Write(b []byte) (int, error) {
 func (w TelescopeResponseWriter) WriteString(s string) (int, error) {
 	w.Body.WriteString(s)
 	return w.ResponseWriter.WriteString(s)
+}
+
+type ResponseWriter struct {
+	http.ResponseWriter
+	size   int
+	status int
+}
+
+func (w *ResponseWriter) reset(writer http.ResponseWriter) {
+	w.ResponseWriter = writer
+	w.size = -1
+	w.status = 200
+}
+
+func (w *ResponseWriter) WriteHeader(code int) {
+	if code > 0 && w.status != code {
+		w.status = code
+	}
+}
+
+func (w *ResponseWriter) WriteHeaderNow() {
+	if !w.Written() {
+		w.size = 0
+		w.ResponseWriter.WriteHeader(w.status)
+	}
+}
+
+func (w *ResponseWriter) Write(data []byte) (n int, err error) {
+	w.WriteHeaderNow()
+	n, err = w.ResponseWriter.Write(data)
+	w.size += n
+	return
+}
+
+func (w *ResponseWriter) WriteString(s string) (n int, err error) {
+	w.WriteHeaderNow()
+	n, err = io.WriteString(w.ResponseWriter, s)
+	w.size += n
+	return
+}
+
+func (w *ResponseWriter) Status() int {
+	return w.status
+}
+
+func (w *ResponseWriter) Size() int {
+	return w.size
+}
+
+func (w *ResponseWriter) Written() bool {
+	return w.size != -1
+}
+
+// Hijack implements the http.Hijacker interface.
+func (w *ResponseWriter) Hijack() (net.Conn, *bufio.ReadWriter, error) {
+	if w.size < 0 {
+		w.size = 0
+	}
+	return w.ResponseWriter.(http.Hijacker).Hijack()
+}
+
+// CloseNotify implements the http.CloseNotifier interface.
+func (w *ResponseWriter) CloseNotify() <-chan bool {
+	return w.ResponseWriter.(http.CloseNotifier).CloseNotify()
+}
+
+// Flush implements the http.Flusher interface.
+func (w *ResponseWriter) Flush() {
+	w.WriteHeaderNow()
+	w.ResponseWriter.(http.Flusher).Flush()
+}
+
+func (w *ResponseWriter) Pusher() (pusher http.Pusher) {
+	if pusher, ok := w.ResponseWriter.(http.Pusher); ok {
+		return pusher
+	}
+	return nil
 }
 
 var EntryTypeBATCH = "batch"
