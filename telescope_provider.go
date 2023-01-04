@@ -51,6 +51,11 @@ func (t *Providers) SetLog() {
 	logrus.AddHook(hook)
 }
 
+// AddRoute 允许重载处理
+func (t *Providers) AddRoute(v Type) {
+	Routes[v.BindType()] = v
+}
+
 // @Bean
 type telescopeHook struct {
 	mysql     *gorm.DB
