@@ -1,0 +1,15 @@
+goroutine 209 [running]:\nruntime/debug.Stack()
+/usr/local/opt/go/libexec/src/runtime/debug/stack.go:24 +0x7a\ngithub.com/go-home-admin/telescope.(*telescopeHook).EntryTypeLOG(0xc00052f200, 0xc0001a70a0)
+/Users/lvluo/Desktop/gongsi/nongchang.git/vendor/github.com/go-home-admin/telescope/telescope_provider.go:121 +0x5c\ngithub.com/go-home-admin/telescope.(*telescopeHook).Fire(0xc00052f200, 0xc0001a70a0)
+/Users/lvluo/Desktop/gongsi/nongchang.git/vendor/github.com/go-home-admin/telescope/telescope_provider.go:95 +0x467\ngithub.com/sirupsen/logrus.LevelHooks.Fire(0xc0005732f0, 0x2, 0xc0001a70a0)
+/Users/lvluo/Desktop/gongsi/nongchang.git/vendor/github.com/sirupsen/logrus/hooks.go:28 +0xd5\ngithub.com/sirupsen/logrus.(*Entry).fireHooks(0xc0001a70a0)
+/Users/lvluo/Desktop/gongsi/nongchang.git/vendor/github.com/sirupsen/logrus/entry.go:280 +0x26a\ngithub.com/sirupsen/logrus.(*Entry).log(0xc000690230, 0x2, {0xc00051d060, 0x1b})
+/Users/lvluo/Desktop/gongsi/nongchang.git/vendor/github.com/sirupsen/logrus/entry.go:242 +0x1ee\ngithub.com/sirupsen/logrus.(*Entry).Log(0xc000690230, 0x2, {0xc000573770, 0x1, 0x1})
+/Users/lvluo/Desktop/gongsi/nongchang.git/vendor/github.com/sirupsen/logrus/entry.go:304 +0x89\ngithub.com/sirupsen/logrus.(*Logger).Log(0xc000482280, 0x2, {0xc000573770, 0x1, 0x1})
+/Users/lvluo/Desktop/gongsi/nongchang.git/vendor/github.com/sirupsen/logrus/logger.go:204 +0x6f\ngithub.com/sirupsen/logrus.(*Logger).Error(0xc000482280, {0xc000573770, 0x1, 0x1})
+/Users/lvluo/Desktop/gongsi/nongchang.git/vendor/github.com/sirupsen/logrus/logger.go:244 +0x3b\ngithub.com/sirupsen/logrus.Error({0xc000573770, 0x1, 0x1})
+/Users/lvluo/Desktop/gongsi/nongchang.git/vendor/github.com/sirupsen/logrus/exported.go:124 +0x3b\ngithub.com/go-home-admin/go-admin/app/tcp/handle.(*Auth).Handle(0xc0005a4840, {0x1018b5ef0, 0xc000483480})
+/Users/lvluo/Desktop/gongsi/nongchang.git/app/tcp/handle/auth.go:37 +0x66a\ngithub.com/go-home-admin/go-admin/app/tcp.(*Event).OnMessage(0xc000548000, {0x1018b5ef0, 0xc000483480}, {0xc0003ee420, 0x2a, 0x30})
+/Users/lvluo/Desktop/gongsi/nongchang.git/app/tcp/handler.go:80 +0x73c\ngithub.com/ctfang/network.(*Server).newConnection(0xc000544000, {0x1018b2ab0, 0xc0001281d0})
+/Users/lvluo/Desktop/gongsi/nongchang.git/vendor/github.com/ctfang/network/Server.go:97 +0x8b8\ncreated by github.com/ctfang/network.(*Server).ListenAndServe
+/Users/lvluo/Desktop/gongsi/nongchang.git/vendor/github.com/ctfang/network/Server.go:45 +0x986\n

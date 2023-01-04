@@ -2,18 +2,14 @@ package telescope
 
 import (
 	"bytes"
-	"encoding/json"
 	"github.com/gin-gonic/gin"
 	"github.com/go-home-admin/home/app"
 	uuid "github.com/satori/go.uuid"
 	"github.com/sirupsen/logrus"
 	"gorm.io/gorm"
-	"net/url"
 	"os"
 	"runtime"
-	"runtime/debug"
 	"strconv"
-	"strings"
 	"sync"
 	"time"
 )
@@ -26,21 +22,24 @@ type Providers struct {
 	init bool
 }
 
+var Routes = make(map[string]Type)
+
 func (t *Providers) Init() {
-	if app.IsDebug() {
-		t.isOpen = true
-	}
-}
-
-func (t *Providers) Boot() {
-	if t.isOpen && !t.init {
+	if app.IsDebug() && !t.init {
 		t.init = true
-		t.SetLog()
+
+		t.Register()
 	}
 }
 
-func (t *Providers) IsEnable() bool {
-	return t.isOpen
+func (t *Providers) Register() {
+	for _, i := range GetAllProvider() {
+		if v, ok := i.(Type); ok {
+			Routes[v.BindType()] = v
+		}
+	}
+
+	t.SetLog()
 }
 
 // SetLog 打开望远镜时候, 设置log
@@ -66,252 +65,26 @@ func (t *telescopeHook) Levels() []logrus.Level {
 func (t *telescopeHook) Fire(entry *logrus.Entry) error {
 	m, ok := entry.Data["type"]
 	if !ok {
-		m = EntryTypeLOG
+		m = "log"
 	}
-	mtype := m.(string)
-	var content map[string]interface{}
-	switch mtype {
-	case EntryTypeQUERY:
-		content, ok = t.EntryTypeQUERY(entry)
-		if !ok {
-			return nil
+	mType := m.(string)
+	route, ok := Routes[mType]
+	if ok {
+		telescopeEntries, tags := route.Handler(entry)
+		if telescopeEntries != nil {
+			res := t.mysql.Table("telescope_entries").Create(telescopeEntries)
+			if res.Error == nil {
+				for _, tag := range tags {
+					t.mysql.Table("telescope_entries_tags").Create(map[string]interface{}{
+						"entry_uuid": tag.EntryUuid,
+						"tag":        tag.Tag,
+					})
+				}
+			}
 		}
-	case EntryTypeREQUEST:
-		content, ok = t.EntryTypeREQUEST(entry)
-		if !ok {
-			return nil
-		}
-	case EntryTypeTCP:
-		content, ok = t.EntryTypeTCP(entry)
-		if !ok {
-			return nil
-		}
-		mtype = EntryTypeREQUEST
-	case EntryTypeREDIS:
-		content = t.EntryTypeREDIS(entry)
-	case EntryTypeJOB:
-		content = t.EntryTypeJob(entry)
-	default:
-		content = t.EntryTypeLOG(entry)
-	}
-	contentStr, err := json.Marshal(content)
-	if err != nil {
-		contentStr = []byte("无法格式化log to json")
-	}
-	id := uuid.NewV4().String()
-	data := map[string]interface{}{
-		"uuid":                    id,
-		"batch_id":                t.TelescopeUUID(),
-		"family_hash":             nil,
-		"should_display_on_index": 1,
-		"type":                    mtype,
-		"content":                 string(contentStr),
-		"created_at":              time.Now().Format("2006-01-02 15:04:05"),
 	}
 
-	res := t.mysql.Table("telescope_entries").Create(data)
-	if res.Error == nil {
-		t.CreateTag(id, mtype, content, entry)
-	}
 	return nil
-}
-
-func (t *telescopeHook) EntryTypeLOG(entry *logrus.Entry) map[string]interface{} {
-	if entry.Level <= logrus.Level(logrus.ErrorLevel) {
-		entry.Data["debug"] = string(debug.Stack())
-	}
-	return map[string]interface{}{
-		"level":    entry.Level,
-		"message":  entry.Message,
-		"context":  entry.Data,
-		"hostname": t.hostname,
-	}
-}
-
-func (t *telescopeHook) EntryTypeQUERY(entry *logrus.Entry) (map[string]interface{}, bool) {
-	if strings.Index(entry.Message, "telescope_") != -1 {
-		return nil, false
-	}
-
-	var file, line string
-	if entry.HasCaller() {
-		file = entry.Caller.File
-		line = strconv.Itoa(entry.Caller.Line)
-	}
-	return map[string]interface{}{
-		"connection": "Mysql",
-		"bindings":   "",
-		"sql":        entry.Message,
-		"time":       "0",
-		"slow":       false,
-		"file":       file,
-		"line":       line,
-		"hash":       "",
-		"hostname":   t.hostname,
-	}, true
-}
-
-func (t *telescopeHook) EntryTypeREQUEST(entry *logrus.Entry) (map[string]interface{}, bool) {
-	var ctx interface{}
-	var res interface{}
-	ctx = entry.Context
-	ginCtx := ctx.(*gin.Context)
-	res = ginCtx.Writer
-	telescopeResp := res.(*TelescopeResponseWriter)
-
-	var response interface{}
-	responseJSON := map[string]interface{}{}
-	err := json.Unmarshal(telescopeResp.Body.Bytes(), &responseJSON)
-	if err != nil || len(responseJSON) == 0 {
-		response = telescopeResp.Body.String()
-	} else {
-		response = responseJSON
-	}
-
-	// 原始请求数据
-	payload := make(map[string]interface{})
-	if ginCtx.Request.PostForm == nil {
-		raw, ok := ginCtx.Get("raw")
-		if ok {
-			switch raw.(type) {
-			case string:
-				data := raw.(string)
-				_ = json.Unmarshal([]byte(data), &payload)
-			case []byte:
-				data := raw.([]byte)
-				_ = json.Unmarshal(data, &payload)
-			}
-		}
-	} else {
-		for k, v := range ginCtx.Request.PostForm {
-			payload[k] = v[0]
-		}
-	}
-	var duration time.Duration
-	start, ok := ginCtx.Get("start")
-	if ok {
-		duration = time.Now().Sub(start.(time.Time))
-	} else {
-		duration = 0
-	}
-
-	return map[string]interface{}{
-		"ip_address": ginCtx.ClientIP(),
-		"uri":        entry.Message,
-		"method":     ginCtx.Request.Method,
-		//"controller_action": "",
-		//"middleware":        []string{},
-		"headers": ginCtx.Request.Header,
-		"payload": payload,
-		//"session":           nil,
-		"response_status": ginCtx.Writer.Status(),
-		"response":        response,
-		"duration":        duration.Milliseconds(),
-		"memory":          ginCtx.Writer.Size(),
-		"hostname":        t.hostname,
-	}, true
-}
-
-func (t *telescopeHook) EntryTypeTCP(entry *logrus.Entry) (map[string]interface{}, bool) {
-	ip, ok := entry.Data["ip"].(string)
-	if !ok {
-		panic("tpc 需要 ip")
-	}
-	// 原始请求数据
-	raw, ok := entry.Data["read"]
-	if !ok {
-		panic("tpc 需要 read")
-	}
-	payload := make(map[string]interface{})
-	if ok {
-		switch raw.(type) {
-		case string:
-			data := raw.(string)
-			_ = json.Unmarshal([]byte(data), &payload)
-		case []byte:
-			data := raw.([]byte)
-			_ = json.Unmarshal(data, &payload)
-		}
-	}
-
-	return map[string]interface{}{
-		"ip_address":      ip,
-		"uri":             entry.Message,
-		"method":          "TCP",
-		"headers":         map[string][]string{},
-		"payload":         payload,
-		"response_status": 200,
-		"response":        "",
-		"duration":        0,
-		"memory":          0,
-		"hostname":        t.hostname,
-	}, true
-}
-
-func (t *telescopeHook) EntryTypeREDIS(entry *logrus.Entry) map[string]interface{} {
-	return map[string]interface{}{
-		"connection": "cache",
-		"command":    entry.Message,
-		"time":       "0",
-		"hostname":   t.hostname,
-	}
-}
-
-func (t *telescopeHook) EntryTypeJob(entry *logrus.Entry) map[string]interface{} {
-	ginCtx := entry.Context.(*gin.Context)
-	data, _ := ginCtx.Get("telescope_data")
-	res := data.(map[string]interface{})
-	res["hostname"] = t.hostname
-	return res
-}
-
-func (t *telescopeHook) CreateTag(uuid, mType string, content map[string]interface{}, entry *logrus.Entry) {
-	var tag string
-	switch mType {
-	case "log":
-		if _, ok := content["level"]; ok {
-			tag = content["level"].(logrus.Level).String()
-		}
-	case "query":
-		if _, ok := content["show"]; ok {
-			if content["show"].(bool) {
-				tag = "show"
-			}
-		}
-	case "request":
-		if _, ok := content["uri"]; ok {
-			u, err := url.Parse(content["uri"].(string))
-			if err == nil && u != nil {
-				tag = u.Path
-			}
-		}
-	case "job":
-		if _, ok := content["status"]; ok {
-			if content["status"].(string) == "failed" {
-				tag = "failed"
-			}
-		}
-	default:
-		tag = ""
-	}
-	if tag != "" {
-		t.mysql.Table("telescope_entries_tags").Create(map[string]interface{}{
-			"entry_uuid": uuid,
-			"tag":        tag,
-		})
-	}
-	// WithFields(Fields{"type": "request", "tags": []string{"test"}})
-	tags, ok := entry.Data["tags"]
-	if ok {
-		if v, ok := tags.([]string); ok {
-			for _, tag := range v {
-				t.mysql.Table("telescope_entries_tags").Create(map[string]interface{}{
-					"entry_uuid": uuid,
-					"tag":        tag,
-				})
-			}
-		}
-	}
 }
 
 func (t *telescopeHook) TelescopeUUID() string {
