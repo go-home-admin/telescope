@@ -4,7 +4,6 @@ package telescope
 import (
 	providers "github.com/go-home-admin/home/bootstrap/providers"
 	gorm "gorm.io/gorm"
-	time "time"
 )
 
 var _ProvidersSingle *Providers

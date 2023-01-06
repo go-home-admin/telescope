@@ -19,12 +19,11 @@ func (b Log) BindType() string {
 }
 
 func (b Log) Handler(entry *logrus.Entry) (*entries, []tag) {
-	if entry.Level <= logrus.Level(logrus.ErrorLevel) {
-		logrus.WithFields(logrus.Fields{
-			"type":  "exception",
-			"entry": entry,
-			"stack": debug.Stack(),
-		}).Error(entry.Message)
+	if entry.Level <= logrus.ErrorLevel {
+		defer func() {
+			telescopeEntries, tags := NewException().ToSave(string(debug.Stack()), entry.Message)
+			NewtelescopeHook().Save(telescopeEntries, tags)
+		}()
 	}
 
 	b.Message = entry.Message

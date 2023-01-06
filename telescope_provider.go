@@ -24,6 +24,11 @@ type Providers struct {
 
 var Routes = make(map[string]Type)
 
+// SetDB 任意框架下使用， 需要手动设置DB
+func (t *Providers) SetDB(db *gorm.DB) {
+	t.Mysql = db
+}
+
 func (t *Providers) Init() {
 	if app.IsDebug() && !t.init {
 		t.init = true
@@ -76,20 +81,24 @@ func (t *telescopeHook) Fire(entry *logrus.Entry) error {
 	route, ok := Routes[mType]
 	if ok {
 		telescopeEntries, tags := route.Handler(entry)
-		if telescopeEntries != nil {
-			res := t.mysql.Table("telescope_entries").Create(telescopeEntries)
-			if res.Error == nil {
-				for _, tag := range tags {
-					t.mysql.Table("telescope_entries_tags").Create(map[string]interface{}{
-						"entry_uuid": tag.EntryUuid,
-						"tag":        tag.Tag,
-					})
-				}
-			}
-		}
+		t.Save(telescopeEntries, tags)
 	}
 
 	return nil
+}
+
+func (t *telescopeHook) Save(telescopeEntries *entries, tags []tag) {
+	if telescopeEntries != nil {
+		res := t.mysql.Table("telescope_entries").Create(telescopeEntries)
+		if res.Error == nil {
+			for _, tag := range tags {
+				t.mysql.Table("telescope_entries_tags").Create(map[string]interface{}{
+					"entry_uuid": tag.EntryUuid,
+					"tag":        tag.Tag,
+				})
+			}
+		}
+	}
 }
 
 func (t *telescopeHook) TelescopeUUID() string {

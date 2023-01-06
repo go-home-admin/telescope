@@ -28,15 +28,8 @@ func (b Tcp) BindType() string {
 	return "tcp"
 }
 
-/*
-Handler
-
-	logrus.WithFields(logrus.Fields{
-		"type": "tcp",
-		"read": raw,
-		"tags": []string{str},
-	}).Debug(tpc_route)
-*/
+// Handler
+// logrus.WithFields(logrus.Fields{"type": "tcp","read": raw,"tags": []string{str}}).Debug(tpc_route)
 func (b Tcp) Handler(entry *logrus.Entry) (*entries, []tag) {
 	ip, ok := entry.Data["ip"]
 	if ok {
@@ -70,6 +63,10 @@ func (b Tcp) Handler(entry *logrus.Entry) (*entries, []tag) {
 	controllerAction, ok := entry.Data["controller_action"]
 	if ok {
 		b.ControllerAction = controllerAction.(string)
+	}
+	start, ok := entry.Data["start"]
+	if ok {
+		b.Duration = time.Now().Sub(start.(time.Time)).Milliseconds()
 	}
 
 	retTags := make([]tag, 0)

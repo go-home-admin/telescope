@@ -7,7 +7,7 @@ gin调试扩展, Telescope, 记录每个 API， 所有运行过程，包括请�
 
 go组件默认使用`database.yaml`的`default`数据库。 如需自定义数据库，新增 `telescope.yaml`, 当前里面只有一行内容。数据库要和laravel互通
 ````yaml
-connection: mysql
+connect: mysql
 ````
 
 #### 注册提供者
@@ -35,7 +35,7 @@ type App struct {
     *Response `inject:""`
 
     // 这是你需要加的代码，注册望远镜
-    *telescope.Providers `inject:""`
+    t *telescope.Providers `inject:""`
 }
 
 func (a *App) Run(servers []constraint.KernelServer) {
@@ -91,5 +91,28 @@ func GetServer() constraint.KernelServer {
 当前还不直接提供页面服务，只能在laravel框架下查看，[laravel](https://learnku.com/docs/laravel/9.x/installation/12200) 需要启动 [telescope](https://github.com/laravel/telescope) 。
 
 请部署一个空的laravel即可，数据库要互通。
-访问http://127.laravel.com/telescope/requests
+
+````shell
+docker run --name nw -p 8000:8000  feizhaoer/laravel-telescope:v2
+docker exec -it nw /bin/bash
+#docker: apt update
+#docker: apt install vim
+#docker: vim .env
+````
+访问http://127.0.0.1:8000/telescope/requests
+
+## 非go-home框架下使用本组件
+
+`telescope` 使用 `logrus` 的`Hook` 方式收集信息到数据库， 所以任意代码只要是使用`logrus.Info("msg)` 等等方式写的`log`。 
+都可以在使用这个页面查看信息。
+
+````go
+// 初始化
+t := &telescope.Providers{Mysql: gorm.DB}
+t.Init()
+
+// 记录任意log
+logrus.WithFields(logrus.Fields{"type": "tcp", "read": raw, "status": 1, "start": start}).Debug("/route")
+// 
+````
 
