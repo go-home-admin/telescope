@@ -61,7 +61,9 @@ func (b Query) Handler(entry *logrus.Entry) (*entries, []tag) {
 	if ok {
 		b.Time = fmt.Sprintf("%.2f", t)
 	}
+	file, line := GetStackCallFile(string(debug.Stack()), RedisSplit)
 
+	b.Connection = file + ":" + line
 	uuid := uuid.NewV4().String()
 	return &entries{
 		Uuid:                 uuid,
