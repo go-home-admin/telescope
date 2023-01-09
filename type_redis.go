@@ -20,7 +20,7 @@ func (b Redis) BindType() string {
 	return "redis"
 }
 
-// 切割标识, 这个标识以后的代码才是业务的
+// RedisSplit 切割标识, 这个标识以后的代码才是业务的
 var RedisSplit = "github.com/sirupsen/logrus/"
 
 func (b Redis) Handler(entry *logrus.Entry) (*entries, []tag) {
@@ -39,7 +39,7 @@ func (b Redis) Handler(entry *logrus.Entry) (*entries, []tag) {
 	}, nil
 }
 
-// 根据关键字的下一行获取调用文件和行号
+// GetStackCallFile 根据关键字的下一行获取调用文件和行号
 func GetStackCallFile(stack, split string) (string, string) {
 	var file, line string
 	stack = strings.ReplaceAll(stack, "\n\t", "@NT@")
