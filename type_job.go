@@ -24,7 +24,7 @@ type Job struct {
 }
 
 func (b Job) Boot() {
-	if app2.IsDebug() {
+	if app2.IsDebug() && app.HasBean("queue") {
 		server := app.GetBean("queue").(*servers.Queue)
 		server.AddMiddleware(func(job constraint.Job, next func(constraint.Job)) {
 			TelescopeStart()
