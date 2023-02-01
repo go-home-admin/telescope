@@ -16,6 +16,7 @@ import (
 
 // Providers @Bean
 type Providers struct {
+	//TODO 默认配置default不生效，config不声明telescope.connect会报错
 	Mysql  *gorm.DB `inject:"mysql, @config(telescope.connect, default)"`
 	isOpen bool
 
@@ -63,9 +64,15 @@ func (t *Providers) AddRoute(v Type) {
 
 // @Bean
 type telescopeHook struct {
-	mysql     *gorm.DB
-	CidToUUID sync.Map
-	hostname  string
+	mysql       *gorm.DB
+	CidToUUID   sync.Map
+	hostname    string
+	isOnlyRoute bool
+}
+
+// TODO 修正不声明config就报错后，可取消这func，改为依赖注入
+func (t *telescopeHook) Init() {
+	t.isOnlyRoute = app.Config("telescope.is_only_route", false)
 }
 
 func (t *telescopeHook) Levels() []logrus.Level {
@@ -78,6 +85,13 @@ func (t *telescopeHook) Fire(entry *logrus.Entry) error {
 		m = "log"
 	}
 	mType := m.(string)
+	//忽略路由以外的请求
+	if mType == "request" && t.isOnlyRoute {
+		ctx := entry.Context.(*gin.Context)
+		if ctx.FullPath() == "" {
+			return nil
+		}
+	}
 	route, ok := Routes[mType]
 	if ok {
 		telescopeEntries, tags := route.Handler(entry)

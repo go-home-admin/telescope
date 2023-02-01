@@ -6,8 +6,8 @@ import (
 	gorm "gorm.io/gorm"
 )
 
-var _ProvidersSingle *Providers
 var _telescopeHookSingle *telescopeHook
+var _ProvidersSingle *Providers
 var _BatchSingle *Batch
 var _CacheSingle *Cache
 var _ClientRequestSingle *ClientRequest
@@ -18,6 +18,7 @@ var _ExceptionSingle *Exception
 var _JobSingle *Job
 var _LogSingle *Log
 var _ModelSingle *Model
+var _NotificationSingle *Notification
 var _QuerySingle *Query
 var _RedisSingle *Redis
 var _RequestSingle *Request
@@ -26,8 +27,8 @@ var _TcpSingle *Tcp
 
 func GetAllProvider() []interface{} {
 	return []interface{}{
-		NewProviders(),
 		NewtelescopeHook(),
+		NewProviders(),
 		NewBatch(),
 		NewCache(),
 		NewClientRequest(),
@@ -38,6 +39,7 @@ func GetAllProvider() []interface{} {
 		NewJob(),
 		NewLog(),
 		NewModel(),
+		NewNotification(),
 		NewQuery(),
 		NewRedis(),
 		NewRequest(),
@@ -46,6 +48,13 @@ func GetAllProvider() []interface{} {
 	}
 }
 
+func NewtelescopeHook() *telescopeHook {
+	if _telescopeHookSingle == nil {
+		_telescopeHookSingle = &telescopeHook{}
+		providers.AfterProvider(_telescopeHookSingle, "")
+	}
+	return _telescopeHookSingle
+}
 func NewProviders() *Providers {
 	if _ProvidersSingle == nil {
 		_ProvidersSingle = &Providers{}
@@ -53,13 +62,6 @@ func NewProviders() *Providers {
 		providers.AfterProvider(_ProvidersSingle, "")
 	}
 	return _ProvidersSingle
-}
-func NewtelescopeHook() *telescopeHook {
-	if _telescopeHookSingle == nil {
-		_telescopeHookSingle = &telescopeHook{}
-		providers.AfterProvider(_telescopeHookSingle, "")
-	}
-	return _telescopeHookSingle
 }
 func NewBatch() *Batch {
 	if _BatchSingle == nil {
@@ -130,6 +132,13 @@ func NewModel() *Model {
 		providers.AfterProvider(_ModelSingle, "")
 	}
 	return _ModelSingle
+}
+func NewNotification() *Notification {
+	if _NotificationSingle == nil {
+		_NotificationSingle = &Notification{}
+		providers.AfterProvider(_NotificationSingle, "")
+	}
+	return _NotificationSingle
 }
 func NewQuery() *Query {
 	if _QuerySingle == nil {
