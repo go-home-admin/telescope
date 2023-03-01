@@ -89,5 +89,5 @@ func (b Request) Handler(entry *logrus.Entry) (*entries, []tag) {
 		Type:                 b.BindType(),
 		Content:              ToContent(b),
 		CreatedAt:            time.Now().Format("2006-01-02 15:04:05"),
-	}, []tag{{Tag: b.Uri, EntryUuid: uuId}}
+	}, []tag{{Tag: ginCtx.FullPath(), EntryUuid: uuId}}
 }
