@@ -153,6 +153,8 @@ func getGoId() uint64 {
 type TelescopeResponseWriter struct {
 	gin.ResponseWriter
 	Body *bytes.Buffer
+	// 如果有解密的系统, 直接设置这个值才回正常记录
+	DecodeBody []byte
 }
 
 func (w TelescopeResponseWriter) Write(b []byte) (int, error) {

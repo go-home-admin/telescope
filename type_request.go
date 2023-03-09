@@ -44,29 +44,32 @@ func (b Request) Handler(entry *logrus.Entry) (*entries, []tag) {
 	ginCtx := ctx.(*gin.Context)
 	res = ginCtx.Writer
 	telescopeResp := res.(*TelescopeResponseWriter)
+	responseBody := telescopeResp.Body.Bytes()
+	if len(telescopeResp.DecodeBody) != 0 {
+		responseBody = telescopeResp.DecodeBody
+	}
 
 	responseJSON := map[string]interface{}{}
-	err := json.Unmarshal(telescopeResp.Body.Bytes(), &responseJSON)
+	err := json.Unmarshal(responseBody, &responseJSON)
 	if err != nil || len(responseJSON) == 0 {
 		b.Response = telescopeResp.Body.String()
 	} else {
 		b.Response = responseJSON
 	}
 
-	// 原始请求数据
-	if ginCtx.Request.PostForm == nil {
-		raw, ok := ginCtx.Get("raw")
-		if ok {
-			switch raw.(type) {
-			case string:
-				data := raw.(string)
-				_ = json.Unmarshal([]byte(data), &b.Payload)
-			case []byte:
-				data := raw.([]byte)
-				_ = json.Unmarshal(data, &b.Payload)
-			}
+	// 原始请求数据, 如果加密场景可以直接设置
+	raw, ok := ginCtx.Get("raw")
+	if ok {
+		switch raw.(type) {
+		case string:
+			data := raw.(string)
+			_ = json.Unmarshal([]byte(data), &b.Payload)
+		case []byte:
+			data := raw.([]byte)
+			_ = json.Unmarshal(data, &b.Payload)
 		}
-	} else {
+	}
+	if ginCtx.Request.PostForm != nil {
 		for k, v := range ginCtx.Request.PostForm {
 			b.Payload[k] = v[0]
 		}
