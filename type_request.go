@@ -6,6 +6,7 @@ import (
 	uuid "github.com/satori/go.uuid"
 	"github.com/sirupsen/logrus"
 	"os"
+	"strings"
 	"time"
 )
 
@@ -84,6 +85,12 @@ func (b Request) Handler(entry *logrus.Entry) (*entries, []tag) {
 	b.Method = ginCtx.Request.Method
 	b.ResponseStatus = ginCtx.Writer.Status()
 
+	uriPath := ginCtx.FullPath()
+	uriPathIndex := strings.Index(uriPath, "?")
+	if uriPathIndex > 0 {
+		uriPath = uriPath[0:uriPathIndex]
+	}
+
 	return &entries{
 		Uuid:                 uuId,
 		BatchId:              NewtelescopeHook().TelescopeUUID(),
@@ -92,5 +99,5 @@ func (b Request) Handler(entry *logrus.Entry) (*entries, []tag) {
 		Type:                 b.BindType(),
 		Content:              ToContent(b),
 		CreatedAt:            time.Now().Format("2006-01-02 15:04:05"),
-	}, []tag{{Tag: ginCtx.FullPath(), EntryUuid: uuId}}
+	}, []tag{{Tag: uriPath, EntryUuid: uuId}}
 }
