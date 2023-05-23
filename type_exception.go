@@ -23,7 +23,7 @@ type Exception struct {
 	Occurrences int            `json:"occurrences"`
 }
 
-func (b Exception) BindType() string {
+func (b *Exception) BindType() string {
 	return "exception"
 }
 
@@ -32,15 +32,15 @@ type trace struct {
 	Line string `json:"line"`
 }
 
-// 切割标识, 这个标识以后的代码才是业务的
+// ExceptionSplit 切割标识, 这个标识以后的代码才是业务的
 var ExceptionSplit = "github.com/sirupsen/logrus/"
 
-func (b Exception) Handler(entry *logrus.Entry) (*entries, []tag) {
+func (b *Exception) Handler(entry *logrus.Entry) (*entries, []tag) {
 	strStack := entry.Data["stack"].(string)
 	return b.ToSave(strStack, entry.Message)
 }
 
-func (b Exception) ToSave(strStack, msg string) (*entries, []tag) {
+func (b *Exception) ToSave(strStack, msg string) (*entries, []tag) {
 	b.Message = msg
 	b.Trace = make([]trace, 0)
 	b.LinePreview = make(map[int]string)

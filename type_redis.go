@@ -16,14 +16,14 @@ type Redis struct {
 	Hostname   string `json:"hostname"`
 }
 
-func (b Redis) BindType() string {
+func (b *Redis) BindType() string {
 	return "redis"
 }
 
 // RedisSplit 切割标识, 这个标识以后的代码才是业务的
 var RedisSplit = "github.com/sirupsen/logrus/"
 
-func (b Redis) Handler(entry *logrus.Entry) (*entries, []tag) {
+func (b *Redis) Handler(entry *logrus.Entry) (*entries, []tag) {
 	file, line := GetStackCallFile(string(debug.Stack()), RedisSplit)
 
 	b.Connection = file + ":" + line

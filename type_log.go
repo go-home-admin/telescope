@@ -14,11 +14,11 @@ type Log struct {
 	Context map[string]interface{} `json:"context"`
 }
 
-func (b Log) BindType() string {
+func (b *Log) BindType() string {
 	return "log"
 }
 
-func (b Log) Handler(entry *logrus.Entry) (*entries, []tag) {
+func (b *Log) Handler(entry *logrus.Entry) (*entries, []tag) {
 	if entry.Level <= logrus.ErrorLevel {
 		defer func() {
 			telescopeEntries, tags := NewException().ToSave(string(debug.Stack()), entry.Message)
@@ -29,9 +29,9 @@ func (b Log) Handler(entry *logrus.Entry) (*entries, []tag) {
 	b.Message = entry.Message
 	b.Context = entry.Data
 	b.Level = entry.Level.String()
-	uuid := uuid.NewV4().String()
+	id := uuid.NewV4().String()
 	return &entries{
-			Uuid:                 uuid,
+			Uuid:                 id,
 			BatchId:              NewtelescopeHook().TelescopeUUID(),
 			FamilyHash:           nil,
 			ShouldDisplayOnIndex: 1,
@@ -39,7 +39,7 @@ func (b Log) Handler(entry *logrus.Entry) (*entries, []tag) {
 			Content:              ToContent(b),
 			CreatedAt:            time.Now().Format("2006-01-02 15:04:05"),
 		}, []tag{{
-			EntryUuid: uuid,
+			EntryUuid: id,
 			Tag:       b.Level,
 		}}
 }

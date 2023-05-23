@@ -23,18 +23,18 @@ type Query struct {
 	Hostname   string   `json:"hostname"`
 }
 
-func (b Query) Init() {
+func (b *Query) Init() {
 	b.Hostname, _ = os.Hostname()
 }
 
-func (b Query) BindType() string {
+func (b *Query) BindType() string {
 	return "query"
 }
 
 // QuerySplit 切割标识, 这个标识以后的代码才是业务的
 var QuerySplit = "/app/entity/"
 
-func (b Query) Handler(entry *logrus.Entry) (*entries, []tag) {
+func (b *Query) Handler(entry *logrus.Entry) (*entries, []tag) {
 	if strings.Index(entry.Message, "telescope_") != -1 {
 		return nil, nil
 	}
@@ -70,9 +70,9 @@ func (b Query) Handler(entry *logrus.Entry) (*entries, []tag) {
 		b.File, b.Line = GetStackCallFile(stack, "go-home-admin/home/bootstrap/services/logs/mysql")
 	}
 
-	uuid := uuid.NewV4().String()
+	id := uuid.NewV4().String()
 	return &entries{
-		Uuid:                 uuid,
+		Uuid:                 id,
 		BatchId:              NewtelescopeHook().TelescopeUUID(),
 		FamilyHash:           nil,
 		ShouldDisplayOnIndex: 1,
