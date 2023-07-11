@@ -52,8 +52,14 @@ func (b *Query) Handler(entry *logrus.Entry) (*entries, []tag) {
 		} else if strings.Index(str, QuerySplit) == -1 {
 			// 第一个非模型目录
 			arr2 := strings.Split(str, "/")
-			for i := len(arr2) - 4; i < len(arr2); i++ {
-				b.File = b.File + "/" + arr2[i]
+			if len(arr2) >= 4 {
+				for i := len(arr2) - 4; i < len(arr2); i++ {
+					b.File = b.File + "/" + arr2[i]
+				}
+			} else {
+				for i := 0; i < len(arr2); i++ {
+					b.File = b.File + "/" + arr2[i]
+				}
 			}
 			break
 		}
