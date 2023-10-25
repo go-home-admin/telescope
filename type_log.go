@@ -20,6 +20,7 @@ func (b *Log) BindType() string {
 
 func (b *Log) Handler(entry *logrus.Entry) (*entries, []tag) {
 	if entry.Level <= logrus.ErrorLevel {
+		hasError = true
 		defer func() {
 			telescopeEntries, tags := NewException().ToSave(string(debug.Stack()), entry.Message)
 			NewtelescopeHook().Save(telescopeEntries, tags)

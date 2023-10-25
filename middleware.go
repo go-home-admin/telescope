@@ -23,7 +23,11 @@ func Telescope() gin.HandlerFunc {
 				})
 				ctx.Abort()
 			}
-			log.WithContext(ctx).WithFields(log.Fields{"type": "request"}).Debug(ctx.Request.URL)
+			if errorRecord && hasError {
+				log.WithContext(ctx).WithFields(log.Fields{"type": "request"}).Error(ctx.Request.URL)
+			} else {
+				log.WithContext(ctx).WithFields(log.Fields{"type": "request"}).Debug(ctx.Request.URL)
+			}
 			TelescopeClose()
 		}()
 		ctx.Set("start", time.Now())

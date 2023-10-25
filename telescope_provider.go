@@ -24,6 +24,10 @@ type Providers struct {
 }
 
 var Routes = make(map[string]Type)
+var (
+	errorRecord bool //为true时，即使非debug模式也会开启望远镜，但只记录出错日志
+	hasError    bool //标记错误日志，以便记录request为错误请求
+)
 
 // SetDB 任意框架下使用， 需要手动设置DB
 func (t *Providers) SetDB(db *gorm.DB) {
@@ -31,9 +35,9 @@ func (t *Providers) SetDB(db *gorm.DB) {
 }
 
 func (t *Providers) Init() {
-	if app.IsDebug() && !t.init {
+	errorRecord = app.Config("telescope.error_record", false)
+	if (app.IsDebug() || errorRecord) && !t.init {
 		t.init = true
-
 		t.Register()
 	}
 }
@@ -76,6 +80,13 @@ func (t *telescopeHook) Init() {
 }
 
 func (t *telescopeHook) Levels() []logrus.Level {
+	if !app.IsDebug() || errorRecord {
+		return []logrus.Level{
+			logrus.PanicLevel,
+			logrus.FatalLevel,
+			logrus.ErrorLevel,
+		}
+	}
 	return logrus.AllLevels
 }
 
