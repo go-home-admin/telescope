@@ -85,7 +85,7 @@ func (t *telescopeHook) Init() {
 }
 
 func (t *telescopeHook) Levels() []logrus.Level {
-	if !app.IsDebug() || errorRecord {
+	if !app.IsDebug() {
 		return []logrus.Level{
 			logrus.PanicLevel,
 			logrus.FatalLevel,
