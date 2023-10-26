@@ -35,7 +35,10 @@ func (t *Providers) SetDB(db *gorm.DB) {
 }
 
 func (t *Providers) Init() {
-	errorRecord = app.Config("telescope.error_record", false)
+	v := app.GetConfigAny("telescope.error_record")
+	if b, ok := v.(*bool); ok && *b {
+		errorRecord = true
+	}
 	if (app.IsDebug() || errorRecord) && !t.init {
 		t.init = true
 		t.Register()
@@ -74,9 +77,11 @@ type telescopeHook struct {
 	isOnlyRoute bool
 }
 
-// TODO 修正不声明config就报错后，可取消这func，改为依赖注入
 func (t *telescopeHook) Init() {
-	t.isOnlyRoute = app.Config("telescope.is_only_route", false)
+	v := app.GetConfigAny("telescope.is_only_route")
+	if b, ok := v.(*bool); ok && *b {
+		t.isOnlyRoute = true
+	}
 }
 
 func (t *telescopeHook) Levels() []logrus.Level {
