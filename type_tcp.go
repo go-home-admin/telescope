@@ -60,6 +60,11 @@ func (b *Tcp) Handler(entry *logrus.Entry) (*entries, []tag) {
 		b.ResponseStatus = status.(int)
 	}
 
+	response, ok := entry.Data["response"]
+	if ok {
+		b.Response = response
+	}
+
 	controllerAction, ok := entry.Data["controller_action"]
 	if ok {
 		b.ControllerAction = controllerAction.(string)
