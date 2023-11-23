@@ -38,30 +38,33 @@ func (b *Query) Handler(entry *logrus.Entry) (*entries, []tag) {
 	if strings.Index(entry.Message, "telescope_") != -1 {
 		return nil, nil
 	}
-	// 根据模型目录 /app/entity/ 定位业务调用
-	stack := string(debug.Stack())
-	arr := strings.Split(string(stack), "\n")
-	status := 0
-	for _, str := range arr {
-		if status <= 1 {
-			index := strings.Index(str, QuerySplit)
-			if index != -1 {
-				status++                   // 模型调用自身,2次后 再下一层就是业务代码
-				b.Connection = str[index:] // 这里记录模型
-			}
-		} else if strings.Index(str, QuerySplit) == -1 {
-			// 第一个非模型目录
-			arr2 := strings.Split(str, "/")
-			if len(arr2) >= 4 {
-				for i := len(arr2) - 4; i < len(arr2); i++ {
-					b.File = b.File + "/" + arr2[i]
+	if strings.Index(b.File, QuerySplit) != -1 {
+		b.File = ""
+		// 根据模型目录 /app/entity/ 定位业务调用
+		stack := string(debug.Stack())
+		arr := strings.Split(string(stack), "\n")
+		status := 0
+		for _, str := range arr {
+			if status <= 1 {
+				index := strings.Index(str, QuerySplit)
+				if index != -1 {
+					status++                   // 模型调用自身,2次后 再下一层就是业务代码
+					b.Connection = str[index:] // 这里记录模型
 				}
-			} else {
-				for i := 0; i < len(arr2); i++ {
-					b.File = b.File + "/" + arr2[i]
+			} else if strings.Index(str, QuerySplit) == -1 {
+				// 第一个非模型目录
+				arr2 := strings.Split(str, "/")
+				if len(arr2) >= 4 {
+					for i := len(arr2) - 4; i < len(arr2); i++ {
+						b.File = b.File + "/" + arr2[i]
+					}
+				} else {
+					for i := 0; i < len(arr2); i++ {
+						b.File = b.File + "/" + arr2[i]
+					}
 				}
+				break
 			}
-			break
 		}
 	}
 
@@ -72,6 +75,7 @@ func (b *Query) Handler(entry *logrus.Entry) (*entries, []tag) {
 	}
 
 	if b.File == "" {
+		stack := string(debug.Stack())
 		// 如果找不到业务级别的文件, 那就可能不是模型触发的, 这里是可见查询mysql.log
 		b.File, b.Line = GetStackCallFile(stack, "go-home-admin/home/bootstrap/services/logs/mysql")
 	}
