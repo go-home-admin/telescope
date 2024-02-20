@@ -37,7 +37,8 @@ var ExceptionSplit = "github.com/sirupsen/logrus/"
 
 func (b *Exception) Handler(entry *logrus.Entry) (*entries, []tag) {
 	strStack := entry.Data["stack"].(string)
-	return b.ToSave(strStack, entry.Message)
+
+	return (*b).ToSave(strStack, entry.Message)
 }
 
 func (b *Exception) ToSave(strStack, msg string) (*entries, []tag) {

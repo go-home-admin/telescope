@@ -23,7 +23,7 @@ type Job struct {
 	Hostname   string      `json:"hostname"`
 }
 
-func (b *Job) Boot() {
+func (j *Job) Boot() {
 	if app2.IsDebug() && app.HasBean("queue") {
 		server := app.GetBean("queue").(*servers.Queue)
 		server.AddMiddleware(func(job constraint.Job, next func(constraint.Job)) {
@@ -45,11 +45,13 @@ func (b *Job) Boot() {
 	}
 }
 
-func (b *Job) BindType() string {
+func (j *Job) BindType() string {
 	return "job"
 }
 
-func (b *Job) Handler(entry *logrus.Entry) (*entries, []tag) {
+func (j *Job) Handler(entry *logrus.Entry) (*entries, []tag) {
+	b := *j
+
 	b.Name = entry.Message
 	b.Data = entry.Data["data"]
 	b.Status = entry.Data["status"].(string)

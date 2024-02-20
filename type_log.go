@@ -14,11 +14,13 @@ type Log struct {
 	Context map[string]interface{} `json:"context"`
 }
 
-func (b *Log) BindType() string {
+func (l *Log) BindType() string {
 	return "log"
 }
 
-func (b *Log) Handler(entry *logrus.Entry) (*entries, []tag) {
+func (l *Log) Handler(entry *logrus.Entry) (*entries, []tag) {
+	b := *l
+
 	if entry.Level <= logrus.ErrorLevel {
 		hasError = true
 		defer func() {

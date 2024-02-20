@@ -17,11 +17,13 @@ type Schedule struct {
 	Hostname    string      `json:"hostname"`
 }
 
-func (b *Schedule) BindType() string {
+func (s *Schedule) BindType() string {
 	return "schedule"
 }
 
-func (b *Schedule) Handler(entry *logrus.Entry) (*entries, []tag) {
+func (s *Schedule) Handler(entry *logrus.Entry) (*entries, []tag) {
+	b := *s
+
 	b.Command = entry.Message
 	return &entries{
 		Uuid:                 uuid.NewV4().String(),

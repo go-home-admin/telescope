@@ -24,13 +24,15 @@ type Tcp struct {
 	Hostname         string                 `json:"hostname,omitempty"`
 }
 
-func (b *Tcp) BindType() string {
+func (c *Tcp) BindType() string {
 	return "tcp"
 }
 
 // Handler
 // logrus.WithFields(logrus.Fields{"type": "tcp","read": raw,"tags": []string{str}}).Debug(tpc_route)
-func (b *Tcp) Handler(entry *logrus.Entry) (*entries, []tag) {
+func (c *Tcp) Handler(entry *logrus.Entry) (*entries, []tag) {
+	b := *c
+
 	ip, ok := entry.Data["ip"]
 	if ok {
 		b.IpAddress = ip.(string)

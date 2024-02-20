@@ -27,15 +27,17 @@ type Request struct {
 	Hostname         string                 `json:"hostname,omitempty"`
 }
 
-func (b *Request) Init() {
-	b.Hostname, _ = os.Hostname()
+func (req *Request) Init() {
+	req.Hostname, _ = os.Hostname()
 }
 
-func (b *Request) BindType() string {
+func (req *Request) BindType() string {
 	return "request"
 }
 
-func (b *Request) Handler(entry *logrus.Entry) (*entries, []tag) {
+func (req *Request) Handler(entry *logrus.Entry) (*entries, []tag) {
+	b := *req
+
 	b.Payload = make(map[string]interface{})
 
 	uuId := uuid.NewV4().String()

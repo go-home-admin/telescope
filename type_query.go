@@ -23,22 +23,24 @@ type Query struct {
 	Hostname   string   `json:"hostname"`
 }
 
-func (b *Query) Init() {
-	b.Hostname, _ = os.Hostname()
+func (q *Query) Init() {
+	q.Hostname, _ = os.Hostname()
 }
 
-func (b *Query) BindType() string {
+func (q *Query) BindType() string {
 	return "query"
 }
 
 // QuerySplit 切割标识, 这个标识以后的代码才是业务的
 var QuerySplit = "/app/entity/"
 
-func (b *Query) Handler(entry *logrus.Entry) (*entries, []tag) {
+func (q *Query) Handler(entry *logrus.Entry) (*entries, []tag) {
 	if strings.Index(entry.Message, "telescope_") != -1 {
 		return nil, nil
 	}
-	b.File = ""
+
+	b := *q
+
 	// 根据模型目录 /app/entity/ 定位业务调用
 	stack := string(debug.Stack())
 	arr := strings.Split(string(stack), "\n")
