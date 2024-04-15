@@ -93,6 +93,17 @@ func (req *Request) Handler(entry *logrus.Entry) (*entries, []tag) {
 		uriPath = uriPath[0:uriPathIndex]
 	}
 
+	retTags := []tag{{Tag: uriPath, EntryUuid: uuId}}
+	tags, ok := entry.Data["tags"]
+	if ok {
+		for _, t := range tags.([]string) {
+			retTags = append(retTags, tag{
+				EntryUuid: uuId,
+				Tag:       t,
+			})
+		}
+	}
+
 	return &entries{
 		Uuid:                 uuId,
 		BatchId:              NewtelescopeHook().TelescopeUUID(),
@@ -101,5 +112,5 @@ func (req *Request) Handler(entry *logrus.Entry) (*entries, []tag) {
 		Type:                 b.BindType(),
 		Content:              ToContent(b),
 		CreatedAt:            time.Now().Format("2006-01-02 15:04:05"),
-	}, []tag{{Tag: uriPath, EntryUuid: uuId}}
+	}, retTags
 }
