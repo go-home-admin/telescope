@@ -25,6 +25,9 @@ func Telescope() gin.HandlerFunc {
 			}
 			if errorRecord && hasError {
 				log.WithContext(ctx).WithFields(log.Fields{"type": "request"}).Error(ctx.Request.URL)
+				defer func() {
+					hasError = false
+				}()
 			} else {
 				log.WithContext(ctx).WithFields(log.Fields{"type": "request"}).Debug(ctx.Request.URL)
 			}
