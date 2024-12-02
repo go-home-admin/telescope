@@ -14,6 +14,13 @@ import (
 // Telescope 启用望眼镜
 func Telescope() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
+		if b, ok := SkipPathList[ctx.FullPath()]; ok && b {
+			isSkip = true
+			ctx.Next()
+			return
+		} else {
+			isSkip = false
+		}
 		defer func() {
 			if r := recover(); r != nil {
 				log.WithField("url", ctx.Request.URL.Path).Error(fmt.Sprint(r) + "\n" + string(debug.Stack()))

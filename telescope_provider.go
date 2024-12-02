@@ -24,9 +24,11 @@ type Providers struct {
 }
 
 var Routes = make(map[string]Type)
+var SkipPathList = make(map[string]bool) //map里的路径不收集
 var (
 	errorRecord bool //为true时，即使非debug模式也会开启望远镜，但只记录出错日志
 	hasError    bool //标记错误日志，以便记录request为错误请求
+	isSkip      bool //当为SkipPathList里的路径时，跳过所有收集
 )
 
 // SetDB 任意框架下使用， 需要手动设置DB
@@ -96,6 +98,10 @@ func (t *telescopeHook) Levels() []logrus.Level {
 }
 
 func (t *telescopeHook) Fire(entry *logrus.Entry) error {
+	if isSkip {
+		//Path in PathSkipList
+		return nil
+	}
 	m, ok := entry.Data["type"]
 	if !ok {
 		m = "log"
