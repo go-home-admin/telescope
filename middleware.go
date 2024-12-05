@@ -8,18 +8,17 @@ import (
 	"io/ioutil"
 	"net/http"
 	"runtime/debug"
+	"strings"
 	"time"
 )
 
 // Telescope 启用望眼镜
 func Telescope() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		if b, ok := SkipPathList[ctx.FullPath()]; ok && b {
-			isSkip = true
+		isSkip = checkSkip(ctx.FullPath())
+		if isSkip {
 			ctx.Next()
 			return
-		} else {
-			isSkip = false
 		}
 		defer func() {
 			if r := recover(); r != nil {
@@ -54,4 +53,17 @@ func Telescope() gin.HandlerFunc {
 		}
 		ctx.Next()
 	}
+}
+
+func checkSkip(path string) bool {
+	for _, s := range SkipPathList {
+		if path == s {
+			return true
+		}
+		arr := strings.Split(s, "*")
+		if len(arr) > 1 && strings.Index(path, arr[0]) == 0 {
+			return true
+		}
+	}
+	return false
 }

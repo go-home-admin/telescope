@@ -24,12 +24,17 @@ type Providers struct {
 }
 
 var Routes = make(map[string]Type)
-var SkipPathList = make(map[string]bool) //map里的路径不收集
 var (
 	errorRecord bool //为true时，即使非debug模式也会开启望远镜，但只记录出错日志
 	hasError    bool //标记错误日志，以便记录request为错误请求
 	isSkip      bool //当为SkipPathList里的路径时，跳过所有收集
 )
+
+// SkipPathList Requests in the list are not logged. Supports paths ending with a wildcard `*`. For example:
+// "/test" means only "/test" is not logged.
+// "/test*" means "/test" and all requests with "/test" as a prefix are not logged.
+// "/test/*" means all requests with "/test" as a prefix are not logged, but "/test" is logged.
+var SkipPathList []string
 
 // SetDB 任意框架下使用， 需要手动设置DB
 func (t *Providers) SetDB(db *gorm.DB) {
