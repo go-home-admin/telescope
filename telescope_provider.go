@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"github.com/gin-gonic/gin"
 	"github.com/go-home-admin/home/app"
-	uuid "github.com/satori/go.uuid"
+	"github.com/google/uuid"
 	"github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 	"os"
@@ -157,7 +157,7 @@ func (t *telescopeHook) TelescopeUUID() string {
 func TelescopeStart() {
 	cid := getGoId()
 	t := NewtelescopeHook()
-	t.CidToUUID.Store(cid, uuid.NewV4().String())
+	t.CidToUUID.Store(cid, uuid.NewString())
 }
 
 func TelescopeClose() {

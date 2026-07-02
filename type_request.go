@@ -3,7 +3,7 @@ package telescope
 import (
 	"encoding/json"
 	"github.com/gin-gonic/gin"
-	uuid "github.com/satori/go.uuid"
+	"github.com/google/uuid"
 	"github.com/sirupsen/logrus"
 	"os"
 	"strings"
@@ -40,7 +40,7 @@ func (req *Request) Handler(entry *logrus.Entry) (*entries, []tag) {
 
 	b.Payload = make(map[string]interface{})
 
-	uuId := uuid.NewV4().String()
+	uuId := uuid.NewString()
 	var ctx interface{}
 	var res interface{}
 	ctx = entry.Context

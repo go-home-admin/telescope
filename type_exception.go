@@ -2,7 +2,7 @@ package telescope
 
 import (
 	"bufio"
-	uuid "github.com/satori/go.uuid"
+	"github.com/google/uuid"
 	"github.com/sirupsen/logrus"
 	"os"
 	"strconv"
@@ -79,7 +79,7 @@ func (b *Exception) ToSave(strStack, msg string) (*entries, []tag) {
 	}
 
 	return &entries{
-		Uuid:                 uuid.NewV4().String(),
+		Uuid:                 uuid.NewString(),
 		BatchId:              NewtelescopeHook().TelescopeUUID(),
 		FamilyHash:           nil,
 		ShouldDisplayOnIndex: 1,
