@@ -6,7 +6,6 @@ require (
 	github.com/gin-gonic/gin v1.12.0
 	github.com/go-home-admin/home v0.5.30
 	github.com/google/uuid v1.6.0
-	github.com/satori/go.uuid v1.2.0
 	github.com/sirupsen/logrus v1.9.4
 	gorm.io/gorm v1.31.2
 )

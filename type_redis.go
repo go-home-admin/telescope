@@ -1,7 +1,7 @@
 package telescope
 
 import (
-	uuid "github.com/satori/go.uuid"
+	"github.com/google/uuid"
 	"github.com/sirupsen/logrus"
 	"runtime/debug"
 	"strings"
@@ -31,7 +31,7 @@ func (r *Redis) Handler(entry *logrus.Entry) (*entries, []tag) {
 	b.Connection = file + ":" + line
 	b.Command = entry.Message
 	return &entries{
-		Uuid:                 uuid.NewV4().String(),
+		Uuid:                 uuid.NewString(),
 		BatchId:              NewtelescopeHook().TelescopeUUID(),
 		FamilyHash:           nil,
 		ShouldDisplayOnIndex: 1,

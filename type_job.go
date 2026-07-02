@@ -6,7 +6,7 @@ import (
 	"github.com/go-home-admin/home/bootstrap/constraint"
 	"github.com/go-home-admin/home/bootstrap/servers"
 	"github.com/go-home-admin/home/bootstrap/services/app"
-	uuid "github.com/satori/go.uuid"
+	"github.com/google/uuid"
 	"github.com/sirupsen/logrus"
 	"time"
 )
@@ -59,7 +59,7 @@ func (j *Job) Handler(entry *logrus.Entry) (*entries, []tag) {
 	b.Connection = entry.Data["connection"].(string)
 
 	return &entries{
-		Uuid:                 uuid.NewV4().String(),
+		Uuid:                 uuid.NewString(),
 		BatchId:              NewtelescopeHook().TelescopeUUID(),
 		FamilyHash:           nil,
 		ShouldDisplayOnIndex: 1,

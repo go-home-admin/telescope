@@ -1,7 +1,7 @@
 package telescope
 
 import (
-	uuid "github.com/satori/go.uuid"
+	"github.com/google/uuid"
 	"github.com/sirupsen/logrus"
 	"time"
 )
@@ -22,7 +22,7 @@ func (b Notification) BindType() string {
 
 func (b Notification) Handler(entry *logrus.Entry) (*entries, []tag) {
 	return &entries{
-		Uuid:                 uuid.NewV4().String(),
+		Uuid:                 uuid.NewString(),
 		BatchId:              NewtelescopeHook().TelescopeUUID(),
 		FamilyHash:           nil,
 		ShouldDisplayOnIndex: 1,

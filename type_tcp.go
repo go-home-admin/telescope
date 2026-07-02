@@ -2,7 +2,7 @@ package telescope
 
 import (
 	"encoding/json"
-	uuid "github.com/satori/go.uuid"
+	"github.com/google/uuid"
 	"github.com/sirupsen/logrus"
 	"time"
 )
@@ -53,7 +53,7 @@ func (c *Tcp) Handler(entry *logrus.Entry) (*entries, []tag) {
 		}
 	}
 
-	uuID := uuid.NewV4().String()
+	uuID := uuid.NewString()
 	b.Method = "TCP"
 	b.Uri = entry.Message
 

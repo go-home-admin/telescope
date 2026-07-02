@@ -1,7 +1,7 @@
 package telescope
 
 import (
-	uuid "github.com/satori/go.uuid"
+	"github.com/google/uuid"
 	"github.com/sirupsen/logrus"
 	"time"
 )
@@ -18,7 +18,7 @@ func (b Dump) BindType() string {
 func (b Dump) Handler(entry *logrus.Entry) (*entries, []tag) {
 	b.Dump = entry.Message
 	return &entries{
-		Uuid:                 uuid.NewV4().String(),
+		Uuid:                 uuid.NewString(),
 		BatchId:              NewtelescopeHook().TelescopeUUID(),
 		FamilyHash:           nil,
 		ShouldDisplayOnIndex: 1,

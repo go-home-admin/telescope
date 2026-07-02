@@ -2,7 +2,7 @@ package telescope
 
 import (
 	"fmt"
-	uuid "github.com/satori/go.uuid"
+	"github.com/google/uuid"
 	"github.com/sirupsen/logrus"
 	"os"
 	"runtime/debug"
@@ -79,7 +79,7 @@ func (q *Query) Handler(entry *logrus.Entry) (*entries, []tag) {
 		b.File, b.Line = GetStackCallFile(stack, "go-home-admin/home/bootstrap/services/logs/mysql")
 	}
 
-	id := uuid.NewV4().String()
+	id := uuid.NewString()
 	return &entries{
 		Uuid:                 id,
 		BatchId:              NewtelescopeHook().TelescopeUUID(),

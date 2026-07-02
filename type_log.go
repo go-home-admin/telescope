@@ -1,7 +1,7 @@
 package telescope
 
 import (
-	uuid "github.com/satori/go.uuid"
+	"github.com/google/uuid"
 	"github.com/sirupsen/logrus"
 	"runtime/debug"
 	"time"
@@ -32,7 +32,7 @@ func (l *Log) Handler(entry *logrus.Entry) (*entries, []tag) {
 	b.Message = entry.Message
 	b.Context = entry.Data
 	b.Level = entry.Level.String()
-	id := uuid.NewV4().String()
+	id := uuid.NewString()
 	return &entries{
 			Uuid:                 id,
 			BatchId:              NewtelescopeHook().TelescopeUUID(),
